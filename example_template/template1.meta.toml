@@ -1,0 +1,7 @@
+name = "Template 1"
+ignored_files = ["donttouchme.txt", "ignore_this_folder"]
+[variables]
+name = "Name of project"
+version = "Version of Project"
+author = "Author of Project"
+# Ignore this <NAME>
