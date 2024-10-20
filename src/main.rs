@@ -81,12 +81,7 @@ fn main() -> Result<()> {
 
         if template.file_type().is_dir() {
             let path = template.into_path();
-            let template_id = match path.file_name() {
-                Some(v) => v,
-                None => continue,
-            }
-            .to_string_lossy()
-            .to_string();
+            let template_id = path.file_name().unwrap().to_string_lossy().to_string();
             let meta_file = path.join(format!("{}.meta.toml", template_id));
             if !meta_file.exists() {
                 eprintln!("No Metafile found for template at {:#?}", path);
@@ -105,6 +100,12 @@ fn main() -> Result<()> {
         ignore_cancellation!(Select::new("Template", templates.keys().collect()).prompt())?;
 
     let selected_template = templates.get(selected_template_name).unwrap();
+    let selected_template_id = selected_template
+        .folder_path
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .to_string();
 
     let destination: PathBuf = PathBuf::from(ignore_cancellation!(Text::new("Destination")
         .with_default(".")
@@ -120,9 +121,10 @@ fn main() -> Result<()> {
         );
     }
 
-    std::fs::create_dir_all(destination.clone()).expect("Could not create destination path");
+    fs::create_dir_all(destination.clone()).expect("Could not create destination path");
     copy_directory(&selected_template.folder_path, &destination)
         .expect("Could not copy template to destination");
+    fs::remove_file(destination.join(format!("{}.meta.toml", selected_template_id)))?; // Remove the meta file from the destination
 
     for entry in WalkDir::new(destination.clone()) {
         let Ok(entry) = entry else { continue };
