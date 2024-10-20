@@ -127,8 +127,6 @@ fn main() -> Result<()> {
     for entry in WalkDir::new(destination.clone()) {
         let Ok(entry) = entry else { continue };
         if entry.file_type().is_file() {
-            println!("{:#?}; {:#?}", entry.path(), selected_template.folder_path);
-
             if selected_template.ignored_files.contains(
                 &entry
                     .path()
@@ -173,6 +171,18 @@ fn main() -> Result<()> {
                 content = new_content
             }
             fs::write(entry.path(), content).expect("Could not write to file");
+        } else if entry.file_type().is_dir() {
+            for (variable, value) in &variables {
+                let name = entry.file_name().to_string_lossy().to_string();
+                let to_find = format!("<{}>", variable.to_lowercase());
+                if let Some(start) = name.to_lowercase().find(&to_find) {
+                    let end = start + to_find.len();
+                    let mut new_name = name.clone();
+                    new_name.replace_range(start..end, value);
+                    fs::rename(entry.path(), entry.path().with_file_name(new_name))
+                        .expect("Could not rename file");
+                }
+            }
         }
     }
 
