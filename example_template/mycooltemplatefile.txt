@@ -1,0 +1,1 @@
+I am <NAME> made by <AUTHOR>! Btw, Variables are not case sensitive
